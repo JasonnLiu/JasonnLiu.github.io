@@ -278,44 +278,15 @@
 
       
         
-          
-            <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/doDispatch.png" alt="DispatcherServlet.doDispatch"></p>
+          <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/doDispatch.png" alt="DispatcherServlet.doDispatch"></p>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/checkMultipart.png" alt="DispatcherServlet.checkMultipart"></p>
 <p>MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver</p>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/resolve.png" alt="CommonsMultipartResolver.resolveMultipart"><br>这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。<br>继续往代码里走。</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/parse.png" alt="CommonsMultipartResolver.parseRequest"></p>
-<p>在这个方法里我们可以看到，spring真正解析multipart文件，是借助于org.apache.commons.fileupload.servlet.ServletFileUpload 这个类。</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/typefileup.png" alt="FileupType"></p>
-<p>ServletFileUpload类层次如上。<br>实际执行的是 FileUploadBase .parseRequest()方法；<br>如下：</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/parsereques.png" alt=" FileUploadBase .parseRequest"></p>
-<p>getItemIterator获取到了fileitem的迭代器，已经可以遍历上传的文件。<br>从这个方法往里走，看看是如何获得的</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/getite.png" alt="FileUploadBase.getItemIterator"></p>
-<p>创建了一个实现类，这个类是FileUploadBase的内部类。</p>
-<p>FileItemIteratorImpl有个私有变量  ，（private final MultipartStream multi）<br>这个对象封装了http请求的inputstream</p>
-<p>对于FileItemIteratorImpl，它所遍历的对象（文件的抽象表示）是它的内部类FileItemStreamImpl，顾名思义就是一个file项的流。</p>
-<p>获得迭代器后，接下获得一个工厂类，不需要深入探究这是如何获得的，我们只要能猜到这个类将会根据迭代器获得的file流来创建相应的文件对象。<br>那接下去，再看是不是这样的。</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/create.png" alt="FileUploadBase .parseRequest"></p>
-<p>这个一段代码就是用来获取FileItem<br>进入fac.createItem</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/createi.png" alt="FileItemFactory.createItem"></p>
-<p>从这个代码，我们可以看到，返回的result对象，并没有包含文件的的数据，这段代码只是给对象的一些变量进行赋值，值得注意的一个变量是repository，这个变量的值是应用的根路径。</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/one.png" alt="Stream.copy"></p>
-<p>注意到这段代码，item拥有文件的数据，fileItem是我们真正所需要的对象，所以猜到这一行代码就是将item里面的文件流复制到fileItem中。</p>
-<p>再回到CommonsMultipartResolver parseRequest(HttpServletRequest request)这个方法<br><img src="http://7xwciz.com1.z0.glb.clouddn.com/parse.png" alt="CommonsMultipartResolver.parseRequest"></p>
-<p>接下来就是将FileItem适配到spring中的代码。<br>所以最终解析过后，返回的是一个MultipartHttpServletRequest，在这个request里已经包含了文件的数据。</p>
-<p>获取到了MultipartFile对象，接下来我们研究spring是如何进行参数绑定的。<br>真正需要用到参数的时候，是handler执行的时候，所以我们从下图中的那一行代码跟进去。</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/handle.png" alt="DispatcherServlet.doDispatch"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/requemethod.png" alt="HandlerAdapter.handler"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/hainvoke.png" alt="HandlerAdapter.handler"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/invokeAndHandle.png" alt="RequestMappingMethod(ServletInvocableHandlerMethod).invokeAndHandle"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/invokeforreq.png" alt="InvocableHandlerMethod.invokeForRequest"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/getArgu.png" alt="InvocableHandlerMethod.getMethodArgumentValues"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/RequestParamresolve.png" alt="request"></p>
-<p>HandlerMethodArgumentResolverComposite这个类组合了很多ArgumentResolver<br>最后的解析落到RequestParamMethodArgumentResolver.resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,NativeWebRequest webRequest, WebDataBinderFactory binderFactory)</p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/resolveArg.png" alt="RequestParamMethodArgumentResolver.resolveArgument"></p>
-<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/resolveName.png" alt=""></p>
-<p>画圈中代码已经表示出，从multipartRequest中拿到了MultipartFile</p>
-
-          
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/07/14/Spring解析Multipart请求及参数绑定源码分析/#more" rel="contents">
+              Weiterlesen &raquo;
+            </a>
+          </div>
         
       
     </div>

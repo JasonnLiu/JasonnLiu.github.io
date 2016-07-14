@@ -85,17 +85,13 @@
 
 
 <meta name="description" content="MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver
-这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。继续往代码里走。
-
-在这个方法里我们可以看到，spring真正解析">
+这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。继续往代码里走。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring解析Multipart请求及参数绑定源码分析">
 <meta property="og:url" content="http://yoursite.com/2016/07/14/Spring解析Multipart请求及参数绑定源码分析/index.html">
 <meta property="og:site_name" content="liujiaxin">
 <meta property="og:description" content="MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver
-这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。继续往代码里走。
-
-在这个方法里我们可以看到，spring真正解析">
+这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。继续往代码里走。">
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/doDispatch.png">
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/checkMultipart.png">
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/resolve.png">
@@ -116,13 +112,11 @@
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/RequestParamresolve.png">
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/resolveArg.png">
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/resolveName.png">
-<meta property="og:updated_time" content="2016-07-14T14:12:23.835Z">
+<meta property="og:updated_time" content="2016-07-14T14:56:47.350Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring解析Multipart请求及参数绑定源码分析">
 <meta name="twitter:description" content="MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver
-这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。继续往代码里走。
-
-在这个方法里我们可以看到，spring真正解析">
+这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。继续往代码里走。">
 <meta name="twitter:image" content="http://7xwciz.com1.z0.glb.clouddn.com/doDispatch.png">
 
 
@@ -310,6 +304,7 @@
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/checkMultipart.png" alt="DispatcherServlet.checkMultipart"></p>
 <p>MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver</p>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/resolve.png" alt="CommonsMultipartResolver.resolveMultipart"><br>这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。<br>继续往代码里走。</p>
+<a id="more"></a>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/parse.png" alt="CommonsMultipartResolver.parseRequest"></p>
 <p>在这个方法里我们可以看到，spring真正解析multipart文件，是借助于org.apache.commons.fileupload.servlet.ServletFileUpload 这个类。</p>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/typefileup.png" alt="FileupType"></p>
