@@ -278,9 +278,11 @@
 
       
         
-          <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/doDispatch.png" alt="DispatcherServlet.doDispatch"></p>
+          <p>先研究muitipart解析的源码，给出个序列图，先从宏观上认识。<br><img src="http://7xwciz.com1.z0.glb.clouddn.com/multipart_resolve.jpg" alt=""></p>
+<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/doDispatch.png" alt="DispatcherServlet.doDispatch"></p>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/checkMultipart.png" alt="DispatcherServlet.checkMultipart"></p>
-<p>MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver<br>
+<p>MultipartResolver的是实现类是 org.springframework.web.multipart.commons.CommonsMultipartResolver</p>
+<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/resolve.png" alt="CommonsMultipartResolver.resolveMultipart"><br>这个方法将解析HttpServletRequest，将文件信息解析成java对象，并封装在MultipartHttpServletRequest中。<br>继续往代码里走。</p>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/07/14/Spring解析Multipart请求及参数绑定源码分析/#more" rel="contents">
               阅读全文 &raquo;
