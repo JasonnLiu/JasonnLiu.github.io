@@ -95,7 +95,7 @@
 我们先来简单回顾一下上一篇的内容，一个Java web 项目必须要有应用代码，代码得部署到应用服务器上，为了保存项目的数据，还需要一个数据库，比如MySQL，有的项目可能还需要一个文件系统来保存数据。这是一个最简单的web项目架构。
 上图表示，应用服务器，数据库，文件系统">
 <meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/1.1.png">
-<meta property="og:updated_time" content="2016-07-18T14:45:33.826Z">
+<meta property="og:updated_time" content="2016-07-18T15:48:34.930Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="做一个Java Web项目所需要掌握的技能（二）">
 <meta name="twitter:description" content="上一篇，给大家讲述了最基本的java web项目构成，掌握了上一篇的知识，只能算入门，这一篇介绍更多Java web高级技术。
@@ -187,6 +187,16 @@
         </li>
       
         
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
@@ -197,12 +207,12 @@
         </li>
       
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags" rel="section">
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
             
-            标签
+            关于
           </a>
         </li>
       
@@ -287,7 +297,7 @@
         <p>上一篇，给大家讲述了最基本的java web项目构成，掌握了上一篇的知识，只能算入门，这一篇介绍更多Java web高级技术。</p>
 <p>我们先来简单回顾一下上一篇的内容，一个Java web 项目必须要有应用代码，代码得部署到应用服务器上，为了保存项目的数据，还需要一个数据库，比如MySQL，有的项目可能还需要一个文件系统来保存数据。这是一个最简单的web项目架构。</p>
 <p><img src="http://7xwciz.com1.z0.glb.clouddn.com/1.1.png" alt=""><br>上图表示，应用服务器，数据库，文件系统全都部署在一台主机上。</p>
-<p>上述架构最简单的架构，常见于个人项目里，纯属个人兴趣来搭的系统。如果我们的网站或应用非常火爆，有很多人来浏览使用。网站应用的流量增大，越来越多的数据也导致存储空间不够，上述架构是很难承受大的访问压力和存储压力。所以我们必须采取一些措施来改善项目架构。</p>
+<p>上述架构最简单的架构，常见于个人项目里，纯属个人兴趣来搭的系统。如果我们的网站或应用非常火爆，有很多人来浏览使用。网站应用的流量增大，越来越多的数据也导致存储空间不够，上述架构是很难承受大的访问压力和存储压力。所以我们必须采取一些措施来改善项目架构。<br><a id="more"></a></p>
 <p>最直接高效的措施就是将应用和数据分离，分别部署应用服务器，数据库服务器，文件服务器。增加更多的主机，用硬件资源来支撑更大的访问量，每台主机都有自己的角色任务，可以根据任务来定制资源，比如应用服务器需要更强大的CPU，而数据库服务器需要更快更大的硬盘和内存。</p>
 <p>当流量进一步增加，我们不断地增加主机的话，不经会增加部署难度，比如主机之间的通信，而且还会增加成本。根据二八定律，80%的业务访问集中在20%的数据上。由此，我们可以利用缓存技术，将一小部分集中访问的数据缓存到内存中，不仅可以分担数据库的访问压力，由于内存访问要明显快于硬盘访问，还能提升访问速度。常用的缓存技术有memcache,redis等。</p>
 <p>另外，基于缓存的思想，我们还可以利用反向代理技术和CDN加速来改善应用架构。这两种技术的基本原理都是缓存，但是区别在于CDN部署在网络提供商的机房，用户从距离最近的网络提供商机房获取数据；而方向代理则部署在应用的中心机房，用户首先访问的是反向代理服务器，如果其中缓存了用户所需要的数据，就直接返回给用户，而不会在访问后端的数据库。反向代理常用的软件有Nginx 和 Squid。还记得我们在上一篇也提到过Nginx,它是一个web服务器，我们也可以用其来实现反向代理。</p>
@@ -397,10 +407,10 @@
       <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
-               src="/images/avatar.gif"
-               alt="John Doe" />
-          <p class="site-author-name" itemprop="name">John Doe</p>
-          <p class="site-description motion-element" itemprop="description"></p>
+               src="http://7xwciz.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="JasonnLiu" />
+          <p class="site-author-name" itemprop="name">JasonnLiu</p>
+          <p class="site-description motion-element" itemprop="description">爱思考的少侠</p>
         </div>
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
@@ -467,7 +477,7 @@
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+  <span class="author" itemprop="copyrightHolder">JasonnLiu</span>
 </div>
 
 <div class="powered-by">
