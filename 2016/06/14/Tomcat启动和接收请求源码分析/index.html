@@ -1,0 +1,618 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="框架分析,java," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="在分析源码之前，先初步了解tomcat的工作原理，有大致的认识才不至于迷失在纷繁复杂的源码中，失去方向。
+图1
+如图是Tomcat的总体结构，Tomcat最核心的组件是Connector和Container。上图右部分就是Container。Container有四种类型，Engine,Host,Context,Wrapper。这四种类型不是平行关系，而是包含关系。最外层的是engine，最里层的是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat启动和接收请求源码分析">
+<meta property="og:url" content="http://yoursite.com/2016/06/14/Tomcat启动和接收请求源码分析/index.html">
+<meta property="og:site_name" content="liujiaxin">
+<meta property="og:description" content="在分析源码之前，先初步了解tomcat的工作原理，有大致的认识才不至于迷失在纷繁复杂的源码中，失去方向。
+图1
+如图是Tomcat的总体结构，Tomcat最核心的组件是Connector和Container。上图右部分就是Container。Container有四种类型，Engine,Host,Context,Wrapper。这四种类型不是平行关系，而是包含关系。最外层的是engine，最里层的是">
+<meta property="og:image" content="http://www.infoq.com/resource/articles/zh-tomcat-http-request-1/zh/resources/image1.jpg">
+<meta property="og:image" content="http://www.infoq.com/resource/articles/zh-tomcat-http-request-1/zh/resources/image4.jpg">
+<meta property="og:updated_time" content="2016-07-22T15:02:11.484Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tomcat启动和接收请求源码分析">
+<meta name="twitter:description" content="在分析源码之前，先初步了解tomcat的工作原理，有大致的认识才不至于迷失在纷繁复杂的源码中，失去方向。
+图1
+如图是Tomcat的总体结构，Tomcat最核心的组件是Connector和Container。上图右部分就是Container。Container有四种类型，Engine,Host,Context,Wrapper。这四种类型不是平行关系，而是包含关系。最外层的是engine，最里层的是">
+<meta name="twitter:image" content="http://www.infoq.com/resource/articles/zh-tomcat-http-request-1/zh/resources/image1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/06/14/Tomcat启动和接收请求源码分析/"/>
+
+  <title> Tomcat启动和接收请求源码分析 | liujiaxin </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">liujiaxin</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Tomcat启动和接收请求源码分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-14T12:07:40+08:00" content="2016-06-14">
+              2016-06-14
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在分析源码之前，先初步了解tomcat的工作原理，有大致的认识才不至于迷失在纷繁复杂的源码中，失去方向。</p>
+<p>图1<br><img src="http://www.infoq.com/resource/articles/zh-tomcat-http-request-1/zh/resources/image1.jpg" alt=""></p>
+<p>如图是Tomcat的总体结构，Tomcat最核心的组件是Connector和Container。上图右部分就是Container。<br>Container有四种类型，Engine,Host,Context,Wrapper。这四种类型不是平行关系，而是包含关系。最外层的是engine，最里层的是Wrapper,Wrapper包装的就是Servlet。</p>
+<p>Connector（多个）和Container（单个）组合成一个service,对外提供服务。<br>service需要有一个server宿主。</p>
+<a id="more"></a>
+<p>最核心的两个类</p>
+<ul>
+<li>org.apache.catalina.startup.Boostrap</li>
+<li>org.apache.catalina.startup.Catalina</li>
+</ul>
+<p>tomcat为开发者提供了startup.bat和shutdown.bat脚本来分别开启和关闭Tomcat容器，仔细阅读批处理文件，我们可以发现批文件是运行了org.apache.catalina.startup.Boostrap的main方法，这个方法就是整个程序的入口，方法体如下。</p>
+<p>代码块1<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> </span>&#123;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (daemon == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="comment">// Don't set daemon until init() has completed</span></div><div class="line">            Bootstrap bootstrap = <span class="keyword">new</span> Bootstrap();</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                bootstrap.init();<span class="comment">//初始化Catalina类</span></div><div class="line">            &#125; <span class="keyword">catch</span> (Throwable t) &#123;</div><div class="line">                handleThrowable(t);</div><div class="line">                t.printStackTrace();</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line">            daemon = bootstrap;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            <span class="comment">// When running as a service the call to stop will be on a new</span></div><div class="line">            <span class="comment">// thread so make sure the correct class loader is used to prevent</span></div><div class="line">            <span class="comment">// a range of class not found exceptions.</span></div><div class="line">            Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);</div><div class="line">        &#125;</div><div class="line">        <span class="comment">//根据批处理运行类时输入的参数，来判断容器操作，我们研究容器启动，输入的参数是"start"</span></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            String command = <span class="string">"start"</span>;</div><div class="line">            <span class="keyword">if</span> (args.length &gt; <span class="number">0</span>) &#123;</div><div class="line">                command = args[args.length - <span class="number">1</span>];</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (command.equals(<span class="string">"startd"</span>)) &#123;</div><div class="line">                args[args.length - <span class="number">1</span>] = <span class="string">"start"</span>;</div><div class="line">                daemon.load(args);</div><div class="line">                daemon.start();</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (command.equals(<span class="string">"stopd"</span>)) &#123;</div><div class="line">                args[args.length - <span class="number">1</span>] = <span class="string">"stop"</span>;</div><div class="line">                daemon.stop();</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (command.equals(<span class="string">"start"</span>)) &#123;</div><div class="line">                daemon.setAwait(<span class="keyword">true</span>);</div><div class="line">                daemon.load(args);<span class="comment">//这一行代码非常重要，它调用了Catalina类的load方法，初始化了整个tomcat容器体系。这里可以先跳到代码块2，查看Catalina的load方法</span></div><div class="line">                daemon.start();<span class="comment">//调用Catalina的start方法，代码块3</span></div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (command.equals(<span class="string">"stop"</span>)) &#123;</div><div class="line">                daemon.stopServer(args);</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (command.equals(<span class="string">"configtest"</span>)) &#123;</div><div class="line">                daemon.load(args);</div><div class="line">                <span class="keyword">if</span> (<span class="keyword">null</span>==daemon.getServer()) &#123;</div><div class="line">                    System.exit(<span class="number">1</span>);</div><div class="line">                &#125;</div><div class="line">                System.exit(<span class="number">0</span>);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                log.warn(<span class="string">"Bootstrap: command \""</span> + command + <span class="string">"\" does not exist."</span>);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</div><div class="line">            <span class="comment">// Unwrap the Exception for clearer error reporting</span></div><div class="line">            <span class="keyword">if</span> (t <span class="keyword">instanceof</span> InvocationTargetException &amp;&amp;</div><div class="line">                    t.getCause() != <span class="keyword">null</span>) &#123;</div><div class="line">                t = t.getCause();</div><div class="line">            &#125;</div><div class="line">            handleThrowable(t);</div><div class="line">            t.printStackTrace();</div><div class="line">            System.exit(<span class="number">1</span>);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>代码块2</p>
+<p>org.apache.catalina.startup.Catalina<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">load</span><span class="params">()</span> </span>&#123;</div><div class="line">       ...<span class="comment">//略去了方法体中很多无关紧要的部分</span></div><div class="line">       ...</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                inputSource.setByteStream(inputStream);</div><div class="line">                digester.push(<span class="keyword">this</span>);</div><div class="line">                digester.parse(inputSource);<span class="comment">//这三行代码的作用就是解析conf/server.xml文件，生成tomcat容器体系的各种实现类，如图1。</span></div><div class="line">            &#125; <span class="keyword">catch</span> (SAXParseException spe) &#123;</div><div class="line">                log.warn(<span class="string">"Catalina.start using "</span> + getConfigFile() + <span class="string">": "</span> +</div><div class="line">                        spe.getMessage());</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</div><div class="line">                log.warn(<span class="string">"Catalina.start using "</span> + getConfigFile() + <span class="string">": "</span> , e);</div><div class="line">                <span class="keyword">return</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">        getServer().setCatalina(<span class="keyword">this</span>);</div><div class="line"></div><div class="line">        <span class="comment">// Start the new server</span></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            getServer().init();<span class="comment">//初始化一些其他的类</span></div><div class="line">        &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</div><div class="line">            <span class="keyword">if</span> (Boolean.getBoolean(<span class="string">"org.apache.catalina.startup.EXIT_ON_INIT_FAILURE"</span>)) &#123;</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> java.lang.Error(e);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                log.error(<span class="string">"Catalina.start"</span>, e);</div><div class="line">            &#125;</div><div class="line">        &#125;<span class="comment">//这段执行完后，会出现大家经常在控制台看到的，"Initialization processed in xxx ms"</span></div><div class="line">    &#125;<span class="comment">//回到代码块1</span></div></pre></td></tr></table></figure></p>
+<p>代码块3</p>
+<p>org.apache.catalina.startup.Catalina<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>&#123;</div><div class="line"></div><div class="line">        <span class="comment">//仍然略去了无关代码</span></div><div class="line">        <span class="comment">// Start the new server</span></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            getServer().start();<span class="comment">//调用了Server的标准实现类StandardServer的start方法，代码块4</span></div><div class="line">        &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</div><div class="line">            log.fatal(sm.getString(<span class="string">"catalina.serverStartFail"</span>), e);</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                getServer().destroy();</div><div class="line">            &#125; <span class="keyword">catch</span> (LifecycleException e1) &#123;</div><div class="line">                log.debug(<span class="string">"destroy() failed for failed Server "</span>, e1);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;<span class="comment">//上面的代码执行完毕后，整个容器和应用都已初始化完毕，会出现大家经常在控制台看到的，"Server startup in xxx ms"</span></div><div class="line"></div><div class="line">        <span class="keyword">if</span> (await) &#123;<span class="comment">//初始化完毕后，容器和应用线程将全部阻塞，等待请求到来</span></div><div class="line">            await();<span class="comment">//调用StandardServer的await方法，查看代码5</span></div><div class="line">            stop();</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>代码块4</p>
+<p>org.apache.catalina.core.StandardServer<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> LifecycleException </span>&#123;</div><div class="line">        <span class="comment">//实际上这段代码是属于StandardServer的父类LifecycleBase</span></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            startInternal();<span class="comment">//重要的就这一行，从这一行进去，就是start 各个services,engines,hosts,context,wrapper,如果应用使用了Spring框架，那么持有DispatchServlet的StandardWrapper 调用loadServlet，初始化DispatchServlet，接下来就进入了应用初始化阶段。总得来说，这行代码的作用就是容器和应用初始化的相关代码</span></div><div class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</div><div class="line">            <span class="comment">// This is an 'uncontrolled' failure so put the component into the</span></div><div class="line">            <span class="comment">// FAILED state and throw an exception.</span></div><div class="line">            ExceptionUtils.handleThrowable(t);</div><div class="line">            setStateInternal(LifecycleState.FAILED, <span class="keyword">null</span>, <span class="keyword">false</span>);</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> LifecycleException(sm.getString(<span class="string">"lifecycleBase.startFail"</span>, toString()), t);</div><div class="line">        &#125;</div><div class="line">       </div><div class="line">    &#125;<span class="comment">//回到代码块3</span></div></pre></td></tr></table></figure></p>
+<p>代码块5<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> </span>&#123;</div><div class="line">        </div><div class="line">        <span class="comment">// Set up a server socket to wait on</span></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            awaitSocket = <span class="keyword">new</span> ServerSocket(port, <span class="number">1</span>,</div><div class="line">                    InetAddress.getByName(address));</div><div class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">            log.error(<span class="string">"StandardServer.await: create["</span> + address</div><div class="line">                               + <span class="string">":"</span> + port</div><div class="line">                               + <span class="string">"]: "</span>, e);</div><div class="line">            <span class="keyword">return</span>;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            awaitThread = Thread.currentThread();</div><div class="line"></div><div class="line">            <span class="comment">// Loop waiting for a connection and a valid command</span></div><div class="line">            <span class="keyword">while</span> (!stopAwait) &#123;</div><div class="line">                ServerSocket serverSocket = awaitSocket;</div><div class="line">                <span class="keyword">if</span> (serverSocket == <span class="keyword">null</span>) &#123;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">                &#125;</div><div class="line">    </div><div class="line">                <span class="comment">// Wait for the next connection</span></div><div class="line">                Socket socket = <span class="keyword">null</span>;</div><div class="line">                StringBuilder command = <span class="keyword">new</span> StringBuilder();</div><div class="line">                <span class="keyword">try</span> &#123;</div><div class="line">                    InputStream stream;</div><div class="line">                    <span class="keyword">long</span> acceptStartTime = System.currentTimeMillis();</div><div class="line">                    <span class="keyword">try</span> &#123;</div><div class="line">                        socket = serverSocket.accept();<span class="comment">//最后main线程就阻塞在这行代码上</span></div><div class="line">                        socket.setSoTimeout(<span class="number">10</span> * <span class="number">1000</span>);  <span class="comment">// Ten seconds</span></div><div class="line">                        stream = socket.getInputStream();</div><div class="line">                    &#125; <span class="keyword">catch</span> (SocketTimeoutException ste) &#123;</div><div class="line">                        <span class="comment">// This should never happen but bug 56684 suggests that</span></div><div class="line">                        <span class="comment">// it does.</span></div><div class="line">                        log.warn(sm.getString(<span class="string">"standardServer.accept.timeout"</span>,</div><div class="line">                                Long.valueOf(System.currentTimeMillis() - acceptStartTime)), ste);</div><div class="line">                        <span class="keyword">continue</span>;</div><div class="line">                    &#125; <span class="keyword">catch</span> (AccessControlException ace) &#123;</div><div class="line">                        log.warn(<span class="string">"StandardServer.accept security exception: "</span></div><div class="line">                                + ace.getMessage(), ace);</div><div class="line">                        <span class="keyword">continue</span>;</div><div class="line">                    &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                        <span class="keyword">if</span> (stopAwait) &#123;</div><div class="line">                            <span class="comment">// Wait was aborted with socket.close()</span></div><div class="line">                            <span class="keyword">break</span>;</div><div class="line">                        &#125;</div><div class="line">                        log.error(<span class="string">"StandardServer.await: accept: "</span>, e);</div><div class="line">                        <span class="keyword">break</span>;</div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    <span class="comment">// Read a set of characters from the socket</span></div><div class="line">                    <span class="keyword">int</span> expected = <span class="number">1024</span>; <span class="comment">// Cut off to avoid DoS attack</span></div><div class="line">                    <span class="keyword">while</span> (expected &lt; shutdown.length()) &#123;</div><div class="line">                        <span class="keyword">if</span> (random == <span class="keyword">null</span>)</div><div class="line">                            random = <span class="keyword">new</span> Random();</div><div class="line">                        expected += (random.nextInt() % <span class="number">1024</span>);</div><div class="line">                    &#125;</div><div class="line">                    <span class="keyword">while</span> (expected &gt; <span class="number">0</span>) &#123;</div><div class="line">                        <span class="keyword">int</span> ch = -<span class="number">1</span>;</div><div class="line">                        <span class="keyword">try</span> &#123;</div><div class="line">                            ch = stream.read();</div><div class="line">                        &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                            log.warn(<span class="string">"StandardServer.await: read: "</span>, e);</div><div class="line">                            ch = -<span class="number">1</span>;</div><div class="line">                        &#125;</div><div class="line">                        <span class="keyword">if</span> (ch &lt; <span class="number">32</span>)  <span class="comment">// Control character or EOF terminates loop</span></div><div class="line">                            <span class="keyword">break</span>;</div><div class="line">                        command.append((<span class="keyword">char</span>) ch);</div><div class="line">                        expected--;</div><div class="line">                    &#125;</div><div class="line">                &#125; <span class="keyword">finally</span> &#123;</div><div class="line">                    <span class="comment">// Close the socket now that we are done with it</span></div><div class="line">                    <span class="keyword">try</span> &#123;</div><div class="line">                        <span class="keyword">if</span> (socket != <span class="keyword">null</span>) &#123;</div><div class="line">                            socket.close();</div><div class="line">                        &#125;</div><div class="line">                    &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                        <span class="comment">// Ignore</span></div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line"></div><div class="line">                <span class="comment">// Match against our command string</span></div><div class="line">                <span class="keyword">boolean</span> match = command.toString().equals(shutdown);</div><div class="line">                <span class="keyword">if</span> (match) &#123;</div><div class="line">                    log.info(sm.getString(<span class="string">"standardServer.shutdownViaPort"</span>));</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">                &#125; <span class="keyword">else</span></div><div class="line">                    log.warn(<span class="string">"StandardServer.await: Invalid command '"</span></div><div class="line">                            + command.toString() + <span class="string">"' received"</span>);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            ServerSocket serverSocket = awaitSocket;</div><div class="line">            awaitThread = <span class="keyword">null</span>;</div><div class="line">            awaitSocket = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">            <span class="comment">// Close the server socket and return</span></div><div class="line">            <span class="keyword">if</span> (serverSocket != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="keyword">try</span> &#123;</div><div class="line">                    serverSocket.close();</div><div class="line">                &#125; <span class="keyword">catch</span> (IOException e) &#123;</div><div class="line">                    <span class="comment">// Ignore</span></div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>至此，程序已经就绪，我们发送一个请求，继续跟踪代码。<br>请求来临后，线程池中会有一个线程被分派到来接受这个请求。<br>先放一个序列图，大家有个整体认识。<br><img src="http://www.infoq.com/resource/articles/zh-tomcat-http-request-1/zh/resources/image4.jpg" alt=""></p>
+<p>在tomcat中处理这个请求（socket）的是Endpoint。笔者现在使用的是阻塞模式，所以是实现类JIoEndpoint$Acceptor。</p>
+<p>org.apache.tomcat.util.net.JIoEndpoint.Acceptor<br>代码块6<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">processSocket</span><span class="params">(Socket socket)</span> </span>&#123;</div><div class="line">        <span class="comment">// Process the request from this socket</span></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            SocketWrapper&lt;Socket&gt; wrapper = <span class="keyword">new</span> SocketWrapper&lt;Socket&gt;(socket);</div><div class="line">            wrapper.setKeepAliveLeft(getMaxKeepAliveRequests());</div><div class="line">            wrapper.setSecure(isSSLEnabled());</div><div class="line">            <span class="comment">// During shutdown, executor may be null - avoid NPE</span></div><div class="line">            <span class="keyword">if</span> (!running) &#123;</div><div class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">            &#125;</div><div class="line">            getExecutor().execute(<span class="keyword">new</span> SocketProcessor(wrapper));</div><div class="line">        &#125; <span class="keyword">catch</span> (RejectedExecutionException x) &#123;</div><div class="line">            log.warn(<span class="string">"Socket processing request was rejected for:"</span>+socket,x);</div><div class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</div><div class="line">            ExceptionUtils.handleThrowable(t);</div><div class="line">            <span class="comment">// This means we got an OOM or similar creating a thread, or that</span></div><div class="line">            <span class="comment">// the pool and its queue are full</span></div><div class="line">            log.error(sm.getString(<span class="string">"endpoint.process.fail"</span>), t);</div><div class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>接下来JIoEndpoint$SocketProcessor真正处理socket</p>
+<p>代码块6</p>
+<p>org.apache.tomcat.util.net.JIoEndpoint.SocketProcessor<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">            ...</div><div class="line"></div><div class="line">                    <span class="keyword">if</span> ((state != SocketState.CLOSED)) &#123;</div><div class="line">                        <span class="keyword">if</span> (status == <span class="keyword">null</span>) &#123;</div><div class="line">                            state = handler.process(socket, SocketStatus.OPEN_READ);<span class="comment">//handler是Endpoint.Handler，这行代码进去会根据protocol创建processor来解析socket</span></div><div class="line">                        &#125; <span class="keyword">else</span> &#123;</div><div class="line">                            state = handler.process(socket,status);</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div></pre></td></tr></table></figure></p>
+<p>代码块7</p>
+<p>Endpoint.Handler的实现类Http11Protocol.Http11ConnectionHandler</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> SocketState <span class="title">process</span><span class="params">(SocketWrapper&lt;S&gt; wrapper,</span></span></div><div class="line">               SocketStatus status) &#123;</div><div class="line">          </div><div class="line"></div><div class="line">           <span class="keyword">try</span> &#123;</div><div class="line">               <span class="keyword">if</span> (processor == <span class="keyword">null</span>) &#123;</div><div class="line">                   processor = recycledProcessors.poll();</div><div class="line">               &#125;</div><div class="line">               <span class="keyword">if</span> (processor == <span class="keyword">null</span>) &#123;</div><div class="line">                   processor = createProcessor();<span class="comment">//根据protocol创建相应的processor</span></div><div class="line">               &#125;</div><div class="line"></div><div class="line">               initSsl(wrapper, processor);</div><div class="line"></div><div class="line">              </div><div class="line">                       &#125;</div><div class="line">                   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (processor.isComet()) &#123;</div><div class="line">                       state = processor.event(status);</div><div class="line">                   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (processor.getUpgradeInbound() != <span class="keyword">null</span>) &#123;</div><div class="line">                       state = processor.upgradeDispatch();</div><div class="line">                   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (processor.isUpgrade()) &#123;</div><div class="line">                       state = processor.upgradeDispatch(status);</div><div class="line">                   &#125; <span class="keyword">else</span> &#123;</div><div class="line">                       state = processor.process(wrapper);<span class="comment">//processor解析socket</span></div><div class="line">                   &#125;</div></pre></td></tr></table></figure>
+<p>解析socket产生request,response对象并交给容器，接下来就是容器处理request,response，接下来的源码就不一一分析。</p>
+<p>从Tomcat的初始化到接收请求大致流程如下：</p>
+<ol>
+<li>Boostrap,Catalina初始化connector,engine,host,context,wrapper各级容器和我们部署的application</li>
+<li>侦听在端口的Endpoint.Acceptor接受socket,并交给一个合适的processor去处理（分派到一个新线程）</li>
+<li>Processor解析socket,生成request,response</li>
+<li>Adapter将request,response交给container</li>
+<li>各级container执行Pipeline中的Valve</li>
+<li>Wrapper.loadServlet 调用servlet</li>
+<li>进入DispatcherServlet类，开始应用内业务逻辑。</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/框架分析/" rel="tag">#框架分析</a>
+          
+            <a href="/tags/java/" rel="tag">#java</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/28/如何打造知识体系——知识的使用/" rel="next" title="如何打造知识体系——知识的使用">
+                <i class="fa fa-chevron-left"></i> 如何打造知识体系——知识的使用
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/14/Spring解析Multipart请求及参数绑定源码分析/" rel="prev" title="Spring解析Multipart请求及参数绑定源码分析">
+                Spring解析Multipart请求及参数绑定源码分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xwciz.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="JasonnLiu" />
+          <p class="site-author-name" itemprop="name">JasonnLiu</p>
+          <p class="site-description motion-element" itemprop="description">爱思考的少侠</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">此文章未包含目录</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">JasonnLiu</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
