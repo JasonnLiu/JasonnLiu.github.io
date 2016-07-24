@@ -248,6 +248,110 @@
             
               
                 
+                <a class="post-title-link" href="/2016/07/24/IO模型：阻塞非阻塞,同步异步/" itemprop="url">
+                  IO模型：阻塞非阻塞,同步异步
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-24T22:07:37+08:00" content="2016-07-24">
+              2016-07-24
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>网络IO模型这个知识点是我从今年年初就遇到，花了很大气力，google,百度了一大堆资料，发现众说纷纭，靠着自己的梳理思考，一度认为已经掌握清楚，然后过了一段时间发现又犯迷糊了，趁着这个准备面试的日子，再次梳理并记录，也希望以后有遇到同样麻烦的同学能有个参考。</p>
+<p>IO是计算机的底层操作，所以程序的IO操作，涉及到操作系统级别的IO操作。</p>
+<p>无论是进行磁盘的IO，或是网络IO，我们都需要进行操作系统级别的系统调用。<br>IO操作涉及两个：</p>
+<p>以读取为例：</p>
+<ol>
+<li>程序进行读调用，查看系统内核数据是否准备好 （用户态IO）</li>
+<li>数据由内核复制到用户空间。（内核态IO）</li>
+</ol>
+<p>阻塞/非阻塞，同步/异步是看待IO的两个维度。</p>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/07/24/IO模型：阻塞非阻塞,同步异步/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/07/14/Spring解析Multipart请求及参数绑定源码分析/" itemprop="url">
                   Spring解析Multipart请求及参数绑定源码分析
                 </a>
@@ -952,7 +1056,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-count">8</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -962,7 +1066,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
