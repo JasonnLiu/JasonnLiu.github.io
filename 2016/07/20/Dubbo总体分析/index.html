@@ -1,0 +1,709 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="框架分析," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Dubbo框架非常大，要面面俱到地分析难度太高，所以我将从以下几个方面切入分析以下Dubbo。
+
+整体架构
+rpc流程分析
+重难点分析
+
+
+整体架构
+
+架构分层">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo总体分析">
+<meta property="og:url" content="http://yoursite.com/2016/07/20/Dubbo总体分析/index.html">
+<meta property="og:site_name" content="liujiaxin">
+<meta property="og:description" content="Dubbo框架非常大，要面面俱到地分析难度太高，所以我将从以下几个方面切入分析以下Dubbo。
+
+整体架构
+rpc流程分析
+重难点分析
+
+
+整体架构
+
+架构分层">
+<meta property="og:image" content="http://www.uml.org.cn/zjjs/images/2015090841.png">
+<meta property="og:image" content="http://dubbo.io/dubbo-modules.jpg-version=1&modificationDate=1332170734000.jpg">
+<meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/%E6%9A%B4%E9%9C%B2%E6%9C%8D%E5%8A%A1.jpg">
+<meta property="og:image" content="http://7xwciz.com1.z0.glb.clouddn.com/%E5%BC%95%E7%94%A8%E6%9C%8D%E5%8A%A1.jpg">
+<meta property="og:image" content="https://github.com/alibaba/dubbo/wiki/dev-guide/images/dubbo_rpc_invoke.jpg">
+<meta property="og:updated_time" content="2016-07-27T14:31:02.198Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dubbo总体分析">
+<meta name="twitter:description" content="Dubbo框架非常大，要面面俱到地分析难度太高，所以我将从以下几个方面切入分析以下Dubbo。
+
+整体架构
+rpc流程分析
+重难点分析
+
+
+整体架构
+
+架构分层">
+<meta name="twitter:image" content="http://www.uml.org.cn/zjjs/images/2015090841.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/07/20/Dubbo总体分析/"/>
+
+  <title> Dubbo总体分析 | liujiaxin </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">liujiaxin</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Dubbo总体分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-20T22:30:37+08:00" content="2016-07-20">
+              2016-07-20
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Dubbo框架非常大，要面面俱到地分析难度太高，所以我将从以下几个方面切入分析以下Dubbo。</p>
+<ul>
+<li>整体架构</li>
+<li>rpc流程分析</li>
+<li>重难点分析</li>
+</ul>
+<hr>
+<p><strong>整体架构</strong></p>
+<ul>
+<li>架构分层</li>
+</ul>
+<p><img src="http://www.uml.org.cn/zjjs/images/2015090841.png" alt=""></p>
+<a id="more"></a>
+<ul>
+<li><p>各层说明</p>
+<ul>
+<li>config 配置层，对外配置接口，以 ServiceConfig, ReferenceConfig 为中心，可以直接new配置类，也可以通过spring解析配置生成配置类</li>
+<li>proxy 服务代理层，服务接口透明代理，生成服务的客户端Stub和服务器端Skeleton, 以 ServiceProxy 为中心，扩展接口为 ProxyFactory</li>
+<li>registry 注册中心层，封装服务地址的注册与发现，以服务URL为中心，扩展接口为 RegistryFactory, Registry, RegistryService</li>
+<li>cluster 路由层，封装多个提供者的路由及负载均衡，并桥接注册中心，以 Invoker 为中心，扩展接口为 Cluster, Directory, Router, LoadBalance</li>
+<li>monitor 监控层，RPC调用次数和调用时间监控，以Statistics为中心，扩展接口为 MonitorFactory, Monitor, MonitorService</li>
+<li>protocol 远程调用层，封将RPC调用，以 Invocation, Result 为中心，扩展接口为 Protocol, Invoker, Exporter</li>
+<li>exchange 信息交换层，封装请求响应模式，同步转异步，以 Request, Response 为中心，扩展接口为 Exchanger, ExchangeChannel, ExchangeClient, ExchangeServer</li>
+<li>transport 网络传输层，抽象mina和netty为统一接口，以Message为中心，扩展接口为 Channel, Transporter, Client, Server, Codec</li>
+<li>serialize 数据序列化层，可复用的一些工具，扩展接口为Serialization, ObjectInput, ObjectOutput, ThreadPool</li>
+</ul>
+</li>
+<li><p>关系说明</p>
+<ul>
+<li>在RPC中，Protocol是核心层，也就是只要有Protocol + Invoker + Exporter就可以完成非透明的RPC调用，然后在Invoker的主过程上Filter拦截点。</li>
+<li>图中的Consumer和Provider是抽象概念，只是想让看图者更直观的了解哪些类分属于客户端与服务器端，不用Client和Server的原因是Dubbo在很多场景下都使用Provider, Consumer, Registry, Monitor划分逻辑拓普节点，保持统一概念。</li>
+<li>而Cluster是外围概念，所以Cluster的目的是将多个Invoker伪装成一个Invoker，这样其它人只要关注Protocol层Invoker即可，加上Cluster或者去掉Cluster对其它层都不会造成影响，因为只有一个提供者时，是不需要Cluster的。</li>
+<li>Proxy层封装了所有接口的透明化代理，而在其它层都以Invoker为中心，只有到了暴露给用户使用时，才用Proxy将Invoker转成接口，或将接口实现转成Invoker，也就是去掉Proxy层RPC是可以Run的，只是不那么透明，不那么看起来像调本地服务一样调远程服务。</li>
+<li>而Remoting实现是Dubbo协议的实现，如果你选择RMI协议，整个Remoting都不会用上，Remoting内部再划为Transport传输层和Exchange信息交换层，Transport层只负责单向消息传输，是对Mina,Netty,Grizzly的抽象，它也可以扩展UDP传输，而Exchange层是在传输层之上封装了Request-Response语义。</li>
+<li>Registry和Monitor实际上不算一层，而是一个独立的节点，只是为了全局概览，用层的方式画在一起。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>模块分包</li>
+</ul>
+<p><img src="http://dubbo.io/dubbo-modules.jpg-version=1&amp;modificationDate=1332170734000.jpg" alt=""></p>
+<ul>
+<li>模块说明<ul>
+<li>dubbo-common 公共逻辑模块，包括Util类和通用模型。定义了几乎所有dubbo模块都会使用到的一些通用与业务领域无关的工具类（io处理、日志处理、配置处理、类处理等等），线程池扩展、二进制代码处理、class编译处理、json处理、数据存储接口，系统版本号等等通用的类和接口。</li>
+<li>dubbo-remoting 远程通讯模块，相当于Dubbo协议的实现，如果RPC用RMI协议则不需要使用此包。该模块是dubbo中的远程通讯模块。rpc的实现基础就是远程通讯，consmer要调用provider的远程方法必须通过网络远程通讯实现。该模块定义了远程传输器、终端（endpoint）、客户端、服务端、编码解码器、数据交换、缓冲区、通讯异常定义等等核心的接口及类构成。他是对于远程网络通讯的抽象。提供了诸如netty、mina、grizzly、http、p2p和zookeeper的协议和技术框架的实现方式。</li>
+<li>dubbo-rpc 远程调用模块，抽象各种协议，以及动态代理，只包含一对一的调用，不关心集群的管理。这是最基本的功能，这个模块定义了rpc的一些抽象的rpc接口和实现类，包括服务发布，服务调用代理，远程调用结果及异常，rpc调用网络协议，rpc调用监听器和过滤器等等。该模块提供了默认的基于dubbo协议的实现模块，还提供了hessian、http、rest、rmi、thrift和webservice等协议的实现，还实现了injvm的本地调用实现，灵活性强，非常通用，能够满足绝大多数项目的使用需求，而且还可以自行实现rpc协议。</li>
+<li>dubbo-cluster 集群模块，将多个服务提供方伪装为一个提供方，包括：负载均衡, 容错，路由等，集群的地址列表可以是静态配置的，也可以是由注册中心下发。</li>
+<li>dubbo-registry 注册中心模块，基于注册中心下发地址的集群方式，以及对各种注册中心的抽象。注册中心也是最重要的组成部分，它是rpc中的consumer和provider两个重要角色的协调者。该项目定义了核心的注册中心接口和实现。具体实现留给了其它项目。有一个默认的实现模块，组册中心提供了mutilcast、redis和zookeeper等多种方式的注册中心实现，用于不同的使用场景。</li>
+<li>dubbo-monitor 监控模块，统计服务调用次数，调用时间的，调用链跟踪的服务。</li>
+<li>dubbo-config 配置模块，是Dubbo对外的API，用户通过Config使用Dubbo，隐藏Dubbo所有细节。</li>
+<li>dubbo-container 容器模块，是一个Standlone的容器，以简单的Main加载Spring启动，因为服务通常不需要Tomcat/JBoss等Web容器的特性，没必要用Web容器去加载服务。</li>
+</ul>
+</li>
+</ul>
+<p>整体上按照分层结构进行分包，与分层的不同点在于：</p>
+<pre><code>container为服务容器，用于部署运行服务，没有在层中画出。
+protocol层和proxy层都放在rpc模块中，这两层是rpc的核心，在不需要集群时(只有一个提供者)，可以只使用这两层完成rpc调用。
+transport层和exchange层都放在remoting模块中，为rpc调用的通讯基础。
+serialize层放在common模块中，以便更大程度复用。
+</code></pre><hr>
+<p><strong>rpc流程分析</strong></p>
+<ul>
+<li>暴露服务时序图</li>
+</ul>
+<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/%E6%9A%B4%E9%9C%B2%E6%9C%8D%E5%8A%A1.jpg" alt=""></p>
+<ol>
+<li>读取配置信息，ProtocolConfig封装了所有配置信息。</li>
+<li>通过ProxyFactory拿到Invoker</li>
+<li>Protocol拿到Invoker导出成Exporter，将Exporter绑定在相应端口上。</li>
+<li>向注册中心注册服务</li>
+</ol>
+<ul>
+<li>引用服务时序图</li>
+</ul>
+<p><img src="http://7xwciz.com1.z0.glb.clouddn.com/%E5%BC%95%E7%94%A8%E6%9C%8D%E5%8A%A1.jpg" alt=""></p>
+<ol>
+<li>读取配置信息</li>
+<li>Protocol订阅服务</li>
+<li>集群操作将多个提供者进行封装，返回ProxyInvoker</li>
+<li>产生ProxyInvoker的代理对象</li>
+</ol>
+<ul>
+<li>调用示意图</li>
+</ul>
+<p><img src="https://github.com/alibaba/dubbo/wiki/dev-guide/images/dubbo_rpc_invoke.jpg" alt=""></p>
+<p>在Dubbo的核心领域模型中：</p>
+<pre><code>Protocol是服务域，它是Invoker暴露和引用的主功能入口，它负责Invoker的生命周期管理。
+Invoker是实体域，它是Dubbo的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起invoke调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
+Invocation是会话域，它持有调用过程中的变量，比如方法名，参数等。
+</code></pre><p>在Dubbo中，有两种invoker。</p>
+<p>根据上面示意图可知，在消费端是Invoker；在提供端是ProxyInvoker</p>
+<p>上面图中有一个很重要的类ProtocolFilterWrapper，它实现了Protocol接口，它的设计使用了责任链模式。</p>
+<hr>
+<p><strong>重难点分析</strong></p>
+<p>在Dubbo中一个非常重要的机制就是扩展点机制，它在Dubbo中的作用就相当于IOC在Spring中的作用。</p>
+<p>扩展点机制是一种插件化机制，它的设计灵感是从JDK标准的SPI(Service Provider Interface)扩展点发现机制加强而来的。它提供一种协议，规定在META-INF目录下提供接口的实现描述文件，框架本身定义接口、规范，第三方需要将自己实现在META-INF下描述清楚，那么框架就会自动加载你的实现，至于怎么加载，JDK并没有提供相关API，而是框架设计者需要考虑和实现的,并且在META-INF下面对实现描述规则，也是需要框架设计者来规定。比如Dubbo的规则是在META-INF/dubbo、META-INF/dubbo/internal或者META-INF/services下面以需要实现的接口全面去创建一个文件，并且在文件中以properties规则一样配置实现类的全面以及分配实现一个名称。那么Dubbo具体是如何实现的呢？</p>
+<p>Dubbo对这一块的实现全部都集中在类ExtensionLoader中，那么接下来将围绕这个类来介绍Dubbo插件化的实现，在介绍Dubbo插件化实施之前，需要知道Dubbo框架是以URL为总线的模式，即运行过程中所有的状态数据信息都可以通过URL来获取，比如当前系统采用什么序列化，采用什么通信，采用什么负载均衡等信息，都是通过URL的参数来呈现的，所以在框架运行过程中，运行到某个阶段需要相应的数据，都可以通过对应的Key从URL的参数列表中获取。</p>
+<p>谈ExtensionLoader之前，先来谈下extension,顾名思义是一种扩展。那么通常对于插件化来说，都会有一个接口和许多实现，接口定义了功能，行为，而实现则是具体去如何执行。在这里，我们可以将extension就理解为是一个实现。那么ExtensionLoader就是一个实现加载器。</p>
+<p>ExtensionLoader是一个单例工厂类，它对外暴露getExtensionLoader静态方法返回一个ExtensionLoader实体，这个方法的入参是一个Class类型，这个方法的意思是返回某个接口的ExtensionLoader。</p>
+<p>查看ExtensionLoader的源码，它大致有几种关键方法。</p>
+<ul>
+<li>getActivateExtension</li>
+<li>getAdaptiveExtension</li>
+</ul>
+<p>ActivateExtension都需要传入url参数，这里涉及到Activate注解，这个注解主要用处是标注在插件接口实现类上，用来配置该扩展实现类激活条件。在Dubbo框架里面的Filter的各种实现类都通过Activate标注，用来描述该Filter什么时候生效。比如MonitorFilter通过Activate标注用来告诉Dubbo框架这个Filter是在服务提供端和消费端会生效的；而TimeoutFilter则是只在服务提供端生效，消费端是不会调用该Filter；ValidationFilter要激活的条件除了在消费端和服务提供端激活，它还配置了value，这个表述另一个激活条件，上面介绍要获取activate extension都需要传入URL对象，那么这个value配置的值则表述URL必须有指定的参数才可以激活这个扩展。例如ValidationFilter则表示URL中必须包含参数validation(Constants.VALIDATION_KEY常量的值就是validation)，否则即使是消费端和服务端都不会激活这个扩展实现，仔细的同学还会发现在ValidationFilter中的Activate注解还有一个参数order，这是表示一种排序规则。因为一个接口的实现有多种，返回的结果是一个列表，如果不指定排序规则，那么可能列表的排序不可控，为了实现这个所以添加了order属性用来控制排序，其中order的值越大，那么该扩展实现排序就越靠前。</p>
+<p>AdaptiveExtension。Dubbo框架提供的各种接口均有很多种类的实现，在引用具体实现的时候不可能通过硬编码制定引用哪个实现，这样整个框架的灵活性严重降低。所以为了能够适配一个接口的各种实现，便有了adaptive extension这一说。对一个接口实现的适配器Dubbo提供两种途径，第一种途径是对某个接口实现对应的适配器，第二种是Dubbo框架动态生成适配器类。先对第一种途径进行介绍，这种途径也最好理解，对于这种途径Dubbo也提供了一个注解—Adaptive，他用来标注在接口的某个实现上，表示这个实现并不是提供具体业务支持，而是作为该接口的适配器。对于这种途径的使用在Dubbo框架中ExtensionFactory的实现类AdaptiveExtensionFactory就是实现适配的功能，它的类被Adaptive进行了标注，那么当调用ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension()的时候将会返回AdaptiveExtensionFactory实体，用来适配ExtensionFactory接口的SPIExtensionFactory和SpringExtensionFactory两种实现，在AdaptiveExtensionFactory将会根据运行时的状态来确定具体调用ExtensionFactory的哪个实现。</p>
+<p>而第二种相对于第一种来说就隐晦一点，是ExtensionLoader通过分析接口配置的adaptive规则动态生成adaptive类并且加载到ClassLoader中，来实现动态适配。配置adaptive的规则也是通过Adaptive注解来设置，该注解有一个value属性，通过设置这个属性便可以设置该接口的Adaptive的规则，上面说过服务调用的所有数据均可以从URL获取（Dubbo的URL总线模式），那么需要Dubbo帮我们动态生成adaptive的扩展接口的方法入参必须包含URL，这样才能根据运行状态动态选择具体实现。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/框架分析/" rel="tag">#框架分析</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/14/Spring解析Multipart请求及参数绑定源码分析/" rel="next" title="Spring解析Multipart请求及参数绑定源码分析">
+                <i class="fa fa-chevron-left"></i> Spring解析Multipart请求及参数绑定源码分析
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/24/IO模型：阻塞非阻塞,同步异步/" rel="prev" title="IO模型：阻塞非阻塞,同步异步">
+                IO模型：阻塞非阻塞,同步异步 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xwciz.com1.z0.glb.clouddn.com/avatar.jpg"
+               alt="JasonnLiu" />
+          <p class="site-author-name" itemprop="name">JasonnLiu</p>
+          <p class="site-description motion-element" itemprop="description">爱思考的少侠</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">9</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">此文章未包含目录</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">JasonnLiu</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
